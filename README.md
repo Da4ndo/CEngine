@@ -18,6 +18,6 @@ Terminal command: `cengine --script myscriptname.py [--name "customname" (defaul
 
 ![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/running_in_console.png?raw=true)
 
-====================================================================================
+============================================================================
 
 ![alt text2](https://github.com/Mesteri05/CEngine/blob/main/images/running_in_console2.png?raw=true)
