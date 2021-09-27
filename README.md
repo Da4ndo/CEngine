@@ -12,7 +12,7 @@ This is a converter for python to create exe from py. CEngine create automatical
 - Fixing bugs
 - Can be run by py file, not just exe. ( ./obfuscated_py/obf_cengine.py )
 
-# Usage
+## Usage
 
 Terminal command: `cengine --script myscriptname.py [--name "customname" (default name: %script_name%-%current_time%.exe) or --custom-args="--icon ../.../" (custom args is made for the user can specify args for pyinstaller)]`
 
