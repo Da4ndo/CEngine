@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # CEngine 1.0.5
 
 CEngine (Convert Engine)
