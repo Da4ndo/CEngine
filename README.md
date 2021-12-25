@@ -18,9 +18,9 @@ This is an ***open-source*** *converter* for python to create **exe from py**. C
 
 ## CHANGELOG
 
-1.0.5.1 (12/25/2021):
+1.0.6 (12/25/2021):
 
-- Reworked / Redesigned **README.md**
+- Changed to ***open-source***
 
 ## How does it work?
 

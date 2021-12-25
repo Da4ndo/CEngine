@@ -1,5 +1,5 @@
 __title__ = "CEngine"
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 
 __author__ = "Da4ndo"
 __discord__ = "Da4ndo#0934"
@@ -396,7 +396,8 @@ class LinuxBuilder():
 
 if __name__ == "__main__":
     if "cengine-no-flag" not in os.environ:
-        print(f"CEngine (Convert Engine)     Version: {__version__}\n")
+        print(f"CEngine (Convert Engine) Open-Source   Version: {__version__}")
+        print("Respository: https://github.com/Da4ndo/CEngine/\n")
     time.sleep(0.5)
     import argparse
     parser = argparse.ArgumentParser()
