@@ -8,16 +8,14 @@
 
 CEngine (Convert Engine)
 
-<<<<<<< HEAD
 ![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/cengine.icon.jpg)
-=======
+
 This is a *converter* for python to create **exe from py**. CEngine create *automatically* virtualenv and install the packages.
 
 - It's using pyinstaller to create exe. 
 - It's better because the executable is smaller (less bytes) and,
 - **CEngine** starts a cleaning proccess and
 deletes the dist, build, *.spec files/directory when the converting is ended.
->>>>>>> 8bef19a80ac423eea96ba9285f67ebc8454d065b
 
 
 This is an ***open-source*** *converter* for python to create **exe from py**. CEngine create *automatically* virtualenv and install the packages.
@@ -48,7 +46,6 @@ Convert py to exe 2 example 👆
 
 ## Usage
 
-<<<<<<< HEAD
 ```
 usage: cengine.exe [-h] [--script SCRIPT] [--name NAME] [--custom-args CUSTOM_ARGS]
                    [--add-imports ADD_IMPORTS [ADD_IMPORTS ...]]
@@ -63,6 +60,3 @@ options:
   --add-imports ADD_IMPORTS [ADD_IMPORTS ...]
                         Add more imports.
 ```
-=======
-![alt text2](https://github.com/Mesteri05/CEngine/blob/main/images/running_in_console2.png?raw=true)
->>>>>>> 8bef19a80ac423eea96ba9285f67ebc8454d065b
