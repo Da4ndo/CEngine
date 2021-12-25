@@ -31,10 +31,10 @@ This is an ***open-source*** *converter* for python to create **exe from py**. C
 
 
 ![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/running_in_console.png)
-Convert py to exe example 👆
+Virtualenv create processs and analyze proccess 👆
 
 ![alt text2](https://github.com/Mesteri05/CEngine/blob/main/images/running_in_console2.png)
-Convert py to exe 2 example 👆
+Cleaning process 👆
 
 ## Usage
 
