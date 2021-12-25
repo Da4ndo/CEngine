@@ -10,14 +10,6 @@ CEngine (Convert Engine)
 
 ![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/cengine.icon.jpg)
 
-This is a *converter* for python to create **exe from py**. CEngine create *automatically* virtualenv and install the packages.
-
-- It's using pyinstaller to create exe. 
-- It's better because the executable is smaller (less bytes) and,
-- **CEngine** starts a cleaning proccess and
-deletes the dist, build, *.spec files/directory when the converting is ended.
-
-
 This is an ***open-source*** *converter* for python to create **exe from py**. CEngine create *automatically* virtualenv and install the packages.
 
 - It's using pyinstaller to create exe. 
