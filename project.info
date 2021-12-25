@@ -1,0 +1,5 @@
+Title: CEngine
+Version: 1.0.5
+Language: Python 3.10.0
+Target_Framework: Windows | Linux
+CEngine_command: cengine --script cengine.py --name cengine --custom-args="--icon NONE --version-file=cengine.version"

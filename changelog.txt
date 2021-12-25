@@ -1,0 +1,17 @@
+1.0.5.1 (12/25/2021):
+
+- Rework / Redesign README.md
+
+1.0.5 (11/20/2021):
+
+- Added **--add-imports** parameter
+
+1.0.4 (10/24/2021):
+
+- Fixing cleaning issues
+
+1.0.3 (09/27/2021):
+    
+- Added Linux support
+- Fixing bugs
+- Can be run by py file, not just exe. ( ./obfuscated_py/obf_cengine.py )
