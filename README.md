@@ -8,7 +8,7 @@
 
 CEngine (Convert Engine)
 
-![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/cengine.icon.jpg?size=440x281)
+![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/cengine.icon.jpg)
 
 This is a *converter* for python to create **exe from py**. CEngine create *automatically* virtualenv and install the packages.
 
