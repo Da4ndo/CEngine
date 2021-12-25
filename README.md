@@ -20,7 +20,7 @@ This is an ***open-source*** *converter* for python to create **exe from py**. C
 
 1.0.5.1 (12/25/2021):
 
-- Rework / Redesign **README.md**
+- Reworked / Redesigned **README.md**
 
 ## How does it work?
 
