@@ -10,25 +10,28 @@ CEngine (Convert Engine)
 
 ![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/cengine.icon.jpg)
 
-This is an ***open-source*** *converter* for python to create **exe from py**. CEngine create *automatically* virtualenv and install the packages.
+This is an ***open-source*** *converter* for python to create **exe from py**. CEngine creates *automatically* virtualenv and installs the packages, and deletes unnecessary files after the build is complete.
 
-- It's using pyinstaller to create exe. 
+- It's using **PyInstaller** or **Nuitka** to create exe. 
 - It's better because the executable is smaller (less bytes) and,
-- **CEngine** starts a cleaning proccess and deletes the dist, build, *.spec files/directory when the converting is ended.
+- **CEngine** starts a cleaning proccess and deletes the dist, build, *.spec files/directories after the build is complete.
 
 ## CHANGELOG
 
-1.0.6 (12/25/2021):
+1.0.7 (12/31/2021):
 
-- Changed to ***open-source***
+- Added Nuitka compiler support.
+- Added `--force-platform` option.
+- Added `--clean` option.
+
+`More in changelog.txt`
 
 ## How does it work?
 
 1. Creates a virtualenv.
 2. Analyzes the target script to get the imports.
 3. Installs the packages with pip.
-4. Starts pyinstaller.
-
+4. Starts pyinstaller or nuitka.
 
 ![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/running_in_console.png)
 Virtualenv create processs and analyze proccess 👆
@@ -39,16 +42,29 @@ Cleaning process 👆
 ## Usage
 
 ```
-usage: cengine.exe [-h] [--script SCRIPT] [--name NAME] [--custom-args CUSTOM_ARGS]
-                   [--add-imports ADD_IMPORTS [ADD_IMPORTS ...]]
+usage: cengine.py [-h] [--nuitka] [-s SCRIPT] [-n NAME] [--custom-args CUSTOM_ARGS] [--add-imports ADD_IMPORTS [ADD_IMPORTS ...]] [--force-platform FORCE_PLATFORM] [--clean]
 
 options:
   -h, --help            show this help message and exit
-  --script SCRIPT, --file SCRIPT
-                        Define a script to be made into an executable
-  --name NAME           Define the script name.
+  --nuitka              Change from pyinstaller to nuitka compiler.
+  -s SCRIPT, --script SCRIPT, --file SCRIPT
+                        Define a script to be made into an executable.
+  -n NAME, --name NAME  Define the script name.
   --custom-args CUSTOM_ARGS
                         Add custom arguments.
   --add-imports ADD_IMPORTS [ADD_IMPORTS ...]
                         Add more imports.
+  --force-platform FORCE_PLATFORM
+                        Add custom arguments.
+  --clean               Clean failed builds.
+
 ```
+Convert: 
+
+- cengine --script **cengine.py** --name **cengine** --custom-args="--icon **NONE** --version-file=**cengine.version**"
+- cengine **--nuitka** --script **cengine.py** --name **cengine.exe**
+
+Clean:
+
+- cengine --script **cengine.py** --clean
+- cengine -**-nuitka** --script **cengine.py** --clean
