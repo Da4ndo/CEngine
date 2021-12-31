@@ -1,8 +1,10 @@
 1.0.7 (12/31/2021):
 
 - Added Nuitka compiler support.
+- Added `--wgnuitka` option.
 - Added `--force-platform` option.
 - Added `--clean` option.
+- Changed custom args method. Now, just pass the argument. (cengine --script .... --icon NONE --version-file "asd")
 
 1.0.6 (12/25/2021):
 

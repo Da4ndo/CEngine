@@ -21,8 +21,10 @@ This is an ***open-source*** *converter* for python to create **exe from py**. C
 1.0.7 (12/31/2021):
 
 - Added Nuitka compiler support.
+- Added `--nuitka` option.
 - Added `--force-platform` option.
 - Added `--clean` option.
+- Changed custom args method. Now, just pass the argument. (cengine --script .... --icon NONE --version-file "asd")
 
 `More in changelog.txt`
 
@@ -42,7 +44,7 @@ Cleaning process 👆
 ## Usage
 
 ```
-usage: cengine.py [-h] [--nuitka] [-s SCRIPT] [-n NAME] [--custom-args CUSTOM_ARGS] [--add-imports ADD_IMPORTS [ADD_IMPORTS ...]] [--force-platform FORCE_PLATFORM] [--clean]
+usage: cengine.py [-h] [--nuitka] [-s SCRIPT] [-n NAME] [--add-imports ADD_IMPORTS [ADD_IMPORTS ...]] [--force-platform FORCE_PLATFORM] [--clean]
 
 options:
   -h, --help            show this help message and exit
@@ -50,8 +52,6 @@ options:
   -s SCRIPT, --script SCRIPT, --file SCRIPT
                         Define a script to be made into an executable.
   -n NAME, --name NAME  Define the script name.
-  --custom-args CUSTOM_ARGS
-                        Add custom arguments.
   --add-imports ADD_IMPORTS [ADD_IMPORTS ...]
                         Add more imports.
   --force-platform FORCE_PLATFORM
@@ -61,10 +61,10 @@ options:
 ```
 Convert: 
 
-- cengine --script **cengine.py** --name **cengine** --custom-args="--icon **NONE** --version-file=**cengine.version**"
-- cengine **--nuitka** --script **cengine.py** --name **cengine.exe**
+- cengine --script **cengine.py** --name **cengine** --icon **NONE** --version-file **cengine.version**
+- cengine **--nuitka** --script **cengine.py** --name **cengine**
 
 Clean:
 
 - cengine --script **cengine.py** --clean
-- cengine -**-nuitka** --script **cengine.py** --clean
+- cengine **--nuitka** --script **cengine.py** --clean
