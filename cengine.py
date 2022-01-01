@@ -1,23 +1,34 @@
 __title__ = "CEngine"
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
 __author__ = "Da4ndo"
 __discord__ = "Da4ndo#0934"
 __github__ = "https://github.com/Da4ndo"
 __licence__ = "MIT"
 
-import datetime, time
+import base64
+import datetime
 import os
 import subprocess
 import sys
-from colorama import Fore
+import time
+import string
+import random
 import colorama
+import cryptocode
+from colorama import Fore
 
 class Cleaner:
     class PyInstaller:
         class Windows:
-            def clean(dir_path, filename, **options):
+            def clean(dir_path, filename, custom_name, **options):
                 print("INFO: Starting cleaning process...")
+                if custom_name == "script+time":
+                    script_name = filename.split("\ ".replace(" ", ""))[-1]
+                    if not script_name:
+                        script_name = filename.split("/")[-1]
+                    custom_name = f"{script_name}_{datetime.date.today()}".replace(".py", "")
+                    del script_name
                 filename = filename.replace(".py", "").replace(".exe", "")
 
                 def clean_directory(path):
@@ -112,12 +123,34 @@ class Cleaner:
                     pass
                 except Exception as e:
                     raise e
+                
+                try:
+                    os.remove(f"{dir_path}/{custom_name}.spec")
+                    print(f"INFO: Removed {custom_name}.spec file")
+                except FileNotFoundError:
+                    pass
+                except Exception as e:
+                    raise e
+
+                try:
+                    os.remove(f"{dir_path}/temp_{custom_name}.py")
+                    print(f"INFO: Removed temp_{custom_name}.py file")
+                except FileNotFoundError:
+                    pass
+                except Exception as e:
+                    raise e
 
                 print("")
 
         class Linux:
-            def clean(dir_path, filename, **options):
+            def clean(dir_path, filename, custom_name, **options):
                 print("INFO: Starting cleaning process...")
+                if custom_name == "script+time":
+                    script_name = filename.split("\ ".replace(" ", ""))[-1]
+                    if not script_name:
+                        script_name = filename.split("/")[-1]
+                    custom_name = f"{script_name}_{datetime.date.today()}".replace(".py", "")
+                    del script_name
                 filename = filename.replace(".py", "").replace(".exe", "")
 
                 def clean_directory_linux(path):
@@ -208,6 +241,22 @@ class Cleaner:
                 try:
                     os.remove(f"{dir_path}/{filename}.spec")
                     print(f"INFO: Removed {filename}.spec file")
+                except FileNotFoundError:
+                    pass
+                except Exception as e:
+                    raise e
+
+                try:
+                    os.remove(f"{dir_path}/{custom_name}.spec")
+                    print(f"INFO: Removed {custom_name}.spec file")
+                except FileNotFoundError:
+                    pass
+                except Exception as e:
+                    raise e
+                
+                try:
+                    os.remove(f"{dir_path}/temp_{custom_name}.py")
+                    print(f"INFO: Removed temp_{custom_name}.py file")
                 except FileNotFoundError:
                     pass
                 except Exception as e:
@@ -382,6 +431,7 @@ class PyInstallerWindowsBuilder():
         self.name = name
         self.custom_args = kwargs.get('custom_args', [])
         self.add_imports = kwargs.get('add_imports', [])
+        self.windows_defender_bypass = kwargs.get('windows_defender_bypass', False)
 
     def build(self):
         print("INFO: Starting build...")
@@ -417,6 +467,8 @@ class PyInstallerWindowsBuilder():
             grouped[instr.opname].append(instr.argval)
 
         script_imports = list(set(grouped["IMPORT_NAME"]))
+        default_imports = list(set(grouped["IMPORT_NAME"]))
+
         for x in self.add_imports: script_imports.append(x)
 
         if "win32api" in script_imports or "win32gui" in script_imports or "win32con" in script_imports or "win32serviceutil" in script_imports or "win32service" in script_imports or "win32event" in script_imports: 
@@ -448,6 +500,7 @@ class PyInstallerWindowsBuilder():
         if "cv2" in script_imports: script_imports.append("opencv-python"), script_imports.remove("cv2")
         if "git" in script_imports: script_imports.append("GitPython"), script_imports.remove("git")
         script_imports.append("pyinstaller")
+        script_imports.append("cryptocode")
         script_imports = list(set(script_imports))
         for imp in script_imports:
             if "." in imp:
@@ -462,14 +515,19 @@ class PyInstallerWindowsBuilder():
             os.remove("NUL")
         except:
             pass
-
         print(Fore.RESET, end="\r")
-        if self.custom_args:
-            process = subprocess.Popen(f"venv\Scripts\pyinstaller.exe --onefile --name \"{self.name}\" {self.custom_args} \"{script_path}\"", shell=True, stdout=subprocess.PIPE)
+        if self.windows_defender_bypass:
+            script_code = """import base64,cryptocode{imports};exec(base64.b64decode(cryptocode.decrypt("{bytes}", "{key}")))"""
+            key = ''.join(random.choices(string.ascii_letters + string.digits, k = 15))    
+
+            with open(dir_path + f"/temp_{self.name}.py", "w") as f:
+                f.write(script_code.replace('{bytes}', cryptocode.encrypt(base64.b64encode(statements.encode()).decode(), key)).replace('{imports}', ','+','.join(default_imports)).replace('{key}', key))
+
+            process = subprocess.Popen(f"venv\Scripts\pyinstaller.exe --onefile --name \"{self.name}\" {self.custom_args} \"{dir_path + f'/temp_{self.name}.py'}\"", shell=True, stdout=subprocess.PIPE)
             process.wait()
 
         else:
-            process = subprocess.Popen(f"venv\Scripts\pyinstaller.exe --onefile --name \"{self.name}\" \"{script_path}\"", shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen(f"venv\Scripts\pyinstaller.exe --onefile --name \"{self.name}\" {self.custom_args} \"{script_path}\"", shell=True, stdout=subprocess.PIPE)
             process.wait()
            
         print(f"{Fore.RESET}==================== PyInstaller End ====================\n")
@@ -488,7 +546,7 @@ class PyInstallerWindowsBuilder():
             print(f"\n*** Build finished in {path} ***")
             return
         
-        Cleaner.PyInstaller.Windows.clean(dir_path, self.script, custom_args=self.custom_args)        
+        Cleaner.PyInstaller.Windows.clean(dir_path, self.script, custom_name=self.name, custom_args=self.custom_args)        
 
         path = os.path.abspath(f"{self.name}.exe")
         print(f"*** Build finished in {path} ***")
@@ -499,6 +557,7 @@ class PyInstallerLinuxBuilder():
         self.name = name
         self.custom_args = kwargs.get('custom_args', [])
         self.add_imports = kwargs.get('add_imports', [])
+        self.windows_defender_bypass = kwargs.get('windows_defender_bypass', False)
 
     def build(self):
         print("INFO: Starting build...")
@@ -534,6 +593,7 @@ class PyInstallerLinuxBuilder():
             grouped[instr.opname].append(instr.argval)
 
         script_imports = list(set(grouped["IMPORT_NAME"]))
+        default_imports = list(set(grouped["IMPORT_NAME"]))
         for x in self.add_imports: script_imports.append(x)
 
         if "win32api" in script_imports or "win32gui" in script_imports or "win32con" in script_imports or "win32serviceutil" in script_imports or "win32service" in script_imports or "win32event" in script_imports: 
@@ -565,6 +625,7 @@ class PyInstallerLinuxBuilder():
         if "cv2" in script_imports: script_imports.append("opencv-python"), script_imports.remove("cv2")
         if "git" in script_imports: script_imports.append("GitPython"), script_imports.remove("git")
         script_imports.append("pyinstaller")
+        script_imports.append("cryptocode")
         script_imports = list(set(script_imports))
         for imp in script_imports:
             if "." in imp:
@@ -581,12 +642,18 @@ class PyInstallerLinuxBuilder():
             pass
 
         print(Fore.RESET, end="\r")
-        if self.custom_args:
-            process = subprocess.Popen(f"/venv/Scripts/pyinstaller --onefile --name \"{self.name}\" {self.custom_args} \"{script_path}\"", shell=True, stdout=subprocess.PIPE)
+        if self.windows_defender_bypass:
+            script_code = """import base64,cryptocode{imports};exec(base64.b64decode(cryptocode.decrypt("{bytes}", "{key}")))"""
+            key = ''.join(random.choices(string.ascii_letters + string.digits, k = 15))    
+
+            with open(dir_path + f"/temp_{self.name}.py", "w") as f:
+                f.write(script_code.replace('{bytes}', cryptocode.encrypt(base64.b64encode(statements.encode()).decode(), key)).replace('{imports}', ','+','.join(default_imports)).replace('{key}', key))
+
+            process = subprocess.Popen(f"venv/Script/pyinstaller.exe --onefile --name \"{self.name}\" {self.custom_args} \"{dir_path + f'/temp_{self.name}.py'}\"", shell=True, stdout=subprocess.PIPE)
             process.wait()
 
         else:
-            process = subprocess.Popen(f"/venv/Scripts/pyinstaller --onefile --name \"{self.name}\" \"{script_path}\"", shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen(f"venv/Scripts/pyinstaller.exe --onefile --name \"{self.name}\" {self.custom_args} \"{script_path}\"", shell=True, stdout=subprocess.PIPE)
             process.wait()
            
         print(f"{Fore.RESET}==================== PyInstaller End ====================\n")
@@ -605,7 +672,7 @@ class PyInstallerLinuxBuilder():
             print(f"\n*** Build finished in {path} ***")
             return
 
-        Cleaner.PyInstaller.Linux.clean(dir_path, self.script, custom_args=self.custom_args)
+        Cleaner.PyInstaller.Linux.clean(dir_path, self.script, custom_name=self.name, custom_args=self.custom_args)
 
         path = os.path.abspath(f"{self.name}.exe")
         print(f"*** Build finished in {path} ***")
@@ -819,6 +886,7 @@ if __name__ == "__main__":
     parser.add_argument('--nuitka', action='store_true', help='Change from pyinstaller to nuitka compiler.', default=False)
     parser.add_argument('-s','--script', "--file", help='Define a script to be made into an executable.')
     parser.add_argument('-n','--name', help='Define the script name.', default="script+time")
+    parser.add_argument('-b','--windows-defender-bypass', action='store_true', help='Bypass windwos defeneder with base64 encode/decode.', default=False)
     parser.add_argument('--add-imports', nargs="+", help='Add more imports.', default=[])
     parser.add_argument('--force-platform', help='Add custom arguments.', default=None)
     parser.add_argument('--clean', action='store_true', help='Clean failed builds.', default=False)
@@ -832,6 +900,8 @@ if __name__ == "__main__":
 
     print(f"INFO: Recognized Platform: {sys.platform}")
 
+    if options.add_imports: print(f"INFO: Custom Added Imports: {options.add_imports}")
+    if options.windows_defender_bypass: print("INFO: Windows-Defender-Bypass ON")
     if sys.platform == "win32" or sys.platform == "win64":
         if options.nuitka:
             if options.clean:
@@ -839,14 +909,17 @@ if __name__ == "__main__":
                 print("*** Cleanning process finished. ***")
 
             else:
+                print("INFO: Using: Nuitka")
+                print("*** Nuitka have some issues. The terminal can freeze or the build process can fail. ***")
                 NuitkaWindowsBuilder(options.script, options.name, custom_args=" ".join(unknown_args), add_imports=options.add_imports).build()
         else:
             if options.clean:
-                Cleaner.PyInstaller.Windows.clean(os.path.dirname(os.path.abspath(options.script)), options.script)
+                Cleaner.PyInstaller.Windows.clean(os.path.dirname(os.path.abspath(options.script)), options.script, custom_name=options.name)
                 print("*** Cleanning process finished. ***")
 
             else:
-                PyInstallerWindowsBuilder(options.script, options.name, custom_args=" ".join(unknown_args), add_imports=options.add_imports).build()
+                print("INFO: Using: PyInstaller")
+                PyInstallerWindowsBuilder(options.script, options.name, custom_args=" ".join(unknown_args), add_imports=options.add_imports, windows_defender_bypass=options.windows_defender_bypass).build()
 
     elif sys.platform == "linux" or sys.platform == "linux2":
         if options.nuitka:
@@ -855,14 +928,17 @@ if __name__ == "__main__":
                 print("*** Cleanning process finished. ***")
 
             else:
+                print("INFO: Using: Nuitka")
+                print("*** Nuitka have some issues. The terminal can freeze or the build process can fail. ***")
                 NuitkaLinuxBuilder( options.script, options.name, custom_args=" ".join(unknown_args), add_imports=options.add_imports).build()   
         else:
             if options.clean:
-                Cleaner.PyInstaller.Linux.clean(os.path.dirname(os.path.abspath(options.script)), options.script)
+                Cleaner.PyInstaller.Linux.clean(os.path.dirname(os.path.abspath(options.script)), options.script, custom_name=options.name)
                 print("*** Cleanning process finished. ***")
 
             else:
-                PyInstallerLinuxBuilder( options.script, options.name, custom_args=" ".join(unknown_args), add_imports=options.add_imports).build()  
+                print("INFO: Using: PyInstaller")
+                PyInstallerLinuxBuilder( options.script, options.name, custom_args=" ".join(unknown_args), add_imports=options.add_imports, windows_defender_bypass=options.windows_defender_bypass).build()  
 
     else:
         print("ERROR:\tThis platform is not supported.")

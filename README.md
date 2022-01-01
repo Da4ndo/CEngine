@@ -18,13 +18,11 @@ This is an ***open-source*** *converter* for python to create **exe from py**. C
 
 ## CHANGELOG
 
-1.0.7 (12/31/2021):
+1.0.8 (01/01/2022):
 
-- Added Nuitka compiler support.
-- Added `--nuitka` option.
-- Added `--force-platform` option.
-- Added `--clean` option.
-- Changed custom args method. Now, just pass the argument. (cengine --script .... --icon NONE --version-file "asd")
+- Added `-b` | `--windows-defender-bypass` option.
+- Solved issues, cleaned code.
+- Code optionalization.
 
 `More in changelog.txt`
 
@@ -44,7 +42,8 @@ Cleaning process 👆
 ## Usage
 
 ```
-usage: cengine.py [-h] [--nuitka] [-s SCRIPT] [-n NAME] [--add-imports ADD_IMPORTS [ADD_IMPORTS ...]] [--force-platform FORCE_PLATFORM] [--clean]
+usage: cengine.py [-h] [--nuitka] [-s SCRIPT] [-n NAME] [-b] [--add-imports ADD_IMPORTS [ADD_IMPORTS ...]]
+                  [--force-platform FORCE_PLATFORM] [--clean]
 
 options:
   -h, --help            show this help message and exit
@@ -52,12 +51,13 @@ options:
   -s SCRIPT, --script SCRIPT, --file SCRIPT
                         Define a script to be made into an executable.
   -n NAME, --name NAME  Define the script name.
+  -b, --windows-defender-bypass
+                        Bypass windwos defeneder with base64 encode/decode.
   --add-imports ADD_IMPORTS [ADD_IMPORTS ...]
                         Add more imports.
   --force-platform FORCE_PLATFORM
                         Add custom arguments.
   --clean               Clean failed builds.
-
 ```
 Convert: 
 
