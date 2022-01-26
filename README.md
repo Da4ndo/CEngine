@@ -52,7 +52,7 @@ options:
                         Define a script to be made into an executable.
   -n NAME, --name NAME  Define the script name.
   -b, --windows-defender-bypass
-                        Bypass windwos defeneder with base64 encode/decode.
+                        Bypass windows defeneder with base64 encode/decode.
   --add-imports ADD_IMPORTS [ADD_IMPORTS ...]
                         Add more imports.
   --force-platform FORCE_PLATFORM
