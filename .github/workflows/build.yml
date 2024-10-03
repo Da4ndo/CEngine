@@ -1,0 +1,45 @@
+name: Build and Upload to GitHub Release
+
+on:
+  release:
+    types: [created]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+    - name: Build
+      run: cargo build --release
+    - name: Get version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      shell: bash
+    - name: Rename executable
+      run: |
+        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          mv target/release/cengine cengine-linux-x64
+        else
+          mv target/release/cengine.exe cengine-windows-x64.exe
+        fi
+      shell: bash
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ${{ matrix.os == 'ubuntu-latest' && './cengine-linux-x64' || './cengine-windows-x64.exe' }}
+        asset_name: ${{ matrix.os == 'ubuntu-latest' && 'cengine-linux-x64' || 'cengine-windows-x64.exe' }}
+        asset_content_type: application/octet-stream

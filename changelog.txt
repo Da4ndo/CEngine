@@ -1,3 +1,5 @@
+
+
 1.0.8 (01/01/2022):
 
 - Added `-b` | `--windows-defender-bypass` option.

@@ -1,0 +1,13 @@
+[package]
+name = "cengine"
+version = "1.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.38"
+clap = "4.5.18"
+colored = "2.1.0"
+rand = "0.8.5"
+regex = "1.11.0"
+crossterm = "0.25.0"
+comfy-table = "7.1.1"
