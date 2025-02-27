@@ -1,3 +1,32 @@
+# CEngine Changelog
+
+## 1.2.0 (2025-02-27)
+
+### Major Changes
+- Complete rewrite in Rust for improved performance and reliability
+- Added colored terminal output with improved progress indicators
+- Implemented better error handling and debugging capabilities
+- Added comprehensive virtual environment management
+
+### New Features
+- Added debug mode with `--debug` flag for detailed logging
+- Added force mode with `--force` flag to bypass warnings
+- Improved import scanning with automatic package name resolution
+- Added support for custom arguments passed directly to PyInstaller
+- Enhanced build process with progress indicators and spinners
+- Implemented automatic cleanup of build artifacts
+
+### Improvements
+- Better detection of built-in Python packages to avoid unnecessary installations
+- Improved error messages and user feedback
+- Added detailed information table showing build environment
+- Enhanced command-line interface with better help messages
+- Optimized build process for faster execution
+
+### Bug Fixes
+- Fixed issues with path handling on different operating systems
+- Resolved problems with executable output paths
+- Fixed cleanup process to properly remove all temporary files
 
 
 1.0.8 (01/01/2022):

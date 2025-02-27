@@ -1,13 +1,25 @@
 [package]
 name = "cengine"
-version = "1.1.0"
-edition = "2021"
+version = "1.2.0"
+edition = "2024"
+authors = ["Da4ndo <contact@da4ndo.com>"]
+description = "A converter for python to create exe from py"
+license = "MIT"
 
 [dependencies]
 chrono = "0.4.38"
 clap = "4.5.18"
-colored = "2.1.0"
-rand = "0.8.5"
+colored = "3.0.0"
+rand = "0.9.0"
 regex = "1.11.0"
-crossterm = "0.25.0"
+crossterm = "0.28.1"
 comfy-table = "7.1.1"
+indicatif = "0.17.5"
+pathdiff = "0.2"
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = true
+codegen-units = 1
+incremental = false

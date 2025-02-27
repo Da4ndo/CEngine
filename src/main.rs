@@ -1,28 +1,84 @@
-use clap::{Command, Arg};
-use std::process;
+use chrono::DateTime;
+use clap::{Arg, Command};
 use colored::*;
+use comfy_table::{modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL, Cell, Color, Table};
+use std::fs;
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
-use comfy_table::{Table, presets::UTF8_FULL, modifiers::UTF8_ROUND_CORNERS, Cell, Color};
 
 mod builder;
+mod clean;
 
 static DEBUG: AtomicBool = AtomicBool::new(false);
 static FORCE: AtomicBool = AtomicBool::new(false);
 
 fn main() {
-    let app = Command::new("cengine")
+    let matches = create_cli().get_matches();
+
+    set_global_flags(&matches);
+    print_debug_info();
+
+    banner();
+
+    let script_path = matches.get_one::<String>("script").unwrap();
+    info_table(script_path);
+
+    let additional_imports = matches
+        .get_many::<String>("add-imports")
+        .map(|imports| imports.cloned().collect());
+
+    handle_venv_creation(script_path, additional_imports);
+
+    let name = get_output_name(&matches, script_path);
+    let custom_args: Vec<String> = matches
+        .get_many::<String>("")
+        .map(|vals| vals.map(|s| s.to_string()).collect())
+        .unwrap_or_default();
+
+    if DEBUG.load(Ordering::Relaxed) {
+        println!("Custom args: {}", custom_args.join(" "));
+    }
+
+    let absolute_script_path = fs::canonicalize(script_path)
+        .expect("Failed to get absolute path")
+        .to_str()
+        .expect("Failed to convert path to string")
+        .to_string();
+
+    let output_path = handle_build(&absolute_script_path, &name, &custom_args);
+    
+    // Call clean after build
+    let dir_path = Path::new(&absolute_script_path).parent().unwrap().to_str().unwrap();
+    if let Err(e) = clean::clean(dir_path, script_path, Some(&name), Some(&custom_args)) {
+        eprintln!("{} Failed to clean: {}", ":: Error:".red(), e.to_string().red());
+    }
+
+    // Print final output path if build was successful
+    if let Some(path) = output_path {
+        // Convert absolute path to relative path
+        let current_dir = std::env::current_dir().unwrap();
+        let path = Path::new(&path);
+        let relative_path = pathdiff::diff_paths(path, current_dir)
+            .unwrap_or_else(|| path.to_path_buf())
+            .display()
+            .to_string();
+        
+        println!("\n\n{} {}", "📦 OUTPUT →".red().bold(), format!("./{}", relative_path).bold());
+    }
+}
+
+fn create_cli() -> Command {
+    Command::new("cengine")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Da4ndo <contact@da4ndo.com>")
         .about("CEngine (Convert Engine) is an open-source converter for Python to create exe from py files.")
         .arg_required_else_help(true)
         .color(clap::ColorChoice::Always)
         .arg(Arg::new("script")
-            .short('s')
-            .long("script")
             .alias("file")
             .value_name("SCRIPT")
-            .required(true)
-            .help("Define a script to be made into an executable"))
+            .help("Define a script to be made into an executable")
+            .index(1))
         .arg(Arg::new("name")
             .short('n')
             .long("name")
@@ -50,20 +106,12 @@ fn main() {
             .long("force")
             .global(true)
             .action(clap::ArgAction::SetTrue)
-            .help("Forces the operation to proceed with all warnings and skippings"));
+            .help("Forces the operation to proceed with all warnings and skippings"))
+        .allow_external_subcommands(true)
+        .allow_hyphen_values(true)
+}
 
-    let matches = app.clone().try_get_matches().unwrap_or_else(|e| {
-        match e.kind() {
-            clap::error::ErrorKind::UnknownArgument | clap::error::ErrorKind::InvalidSubcommand => {
-                eprintln!("{} {}", ":: Error:".red(), e.to_string().red());
-            },
-            _ => {
-                println!("{}", e);
-            }
-        }
-        process::exit(1);
-    });
-
+fn set_global_flags(matches: &clap::ArgMatches) {
     if matches.get_flag("debug") {
         DEBUG.store(true, Ordering::SeqCst);
         println!("{} Debug mode is activated.", ":: Debug:".blue());
@@ -73,89 +121,67 @@ fn main() {
         FORCE.store(true, Ordering::SeqCst);
         println!("{} Force mode is activated.", ":: Debug:".blue());
     }
+}
 
+fn print_debug_info() {
     if DEBUG.load(Ordering::SeqCst) {
-        if cfg!(debug_assertions) {
-            println!("{} Application is running in debug build mode.", ":: Debug:".blue());
+        let mode = if cfg!(debug_assertions) {
+            "debug"
         } else {
-            println!("{} Application is running in release build mode.", ":: Debug:".blue());
-        }
+            "release"
+        };
+        println!(
+            "{} Application is running in {} build mode.",
+            ":: Debug:".blue(),
+            mode
+        );
     }
+}
 
-    banner();
-
-    let mut table = Table::new();
-    table.load_preset(UTF8_FULL)
-        .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_header(vec![
-            Cell::new("Category").fg(Color::Yellow),
-            Cell::new("Information").fg(Color::Yellow)
-        ]);
-
-    table.add_row(vec![
-        Cell::new("OS").fg(Color::Green),
-        Cell::new(std::env::consts::OS).fg(Color::Cyan)
-    ]);
-    table.add_row(vec![
-        Cell::new("Architecture").fg(Color::Green),
-        Cell::new(std::env::consts::ARCH).fg(Color::Cyan)
-    ]);
-
-    let script_path = matches.get_one::<String>("script").unwrap();
-    table.add_row(vec![
-        Cell::new("Script Path").fg(Color::Green),
-        Cell::new(script_path).fg(Color::Cyan)
-    ]);
-
-    if let Ok(canonical_path) = std::fs::canonicalize(script_path) {
-        table.add_row(vec![
-            Cell::new("Canonical Path").fg(Color::Green),
-            Cell::new(&canonical_path.display().to_string()).fg(Color::Cyan)
-        ]);
+fn handle_venv_creation(script_path: &str, additional_imports: Option<Vec<String>>) {
+    match builder::venv::create(script_path, additional_imports) {
+        Ok(_) => println!(
+            "[{}] Virtual environment created successfully",
+            "OK".green()
+        ),
+        Err(e) => eprintln!(
+            "{} Failed to create virtual environment: {}",
+            ":: Error:".red(),
+            e.to_string().red()
+        ),
     }
+}
 
-    if let Ok(metadata) = std::fs::metadata(script_path) {
-        table.add_row(vec![
-            Cell::new("File Size").fg(Color::Green),
-            Cell::new(&format!("{} bytes", metadata.len())).fg(Color::Cyan)
-        ]);
-        if let Ok(modified) = metadata.modified() {
-            if let Ok(modified_str) = modified.duration_since(std::time::UNIX_EPOCH) {
-                table.add_row(vec![
-                    Cell::new("Last Modified").fg(Color::Green),
-                    Cell::new(&format!("{} seconds since UNIX epoch", modified_str.as_secs())).fg(Color::Cyan)
-                ]);
-            }
-        }
+fn get_output_name(matches: &clap::ArgMatches, script_path: &str) -> String {
+    matches
+        .get_one::<String>("name")
+        .cloned()
+        .unwrap_or_else(|| {
+            let file_name = Path::new(script_path)
+                .file_stem()
+                .unwrap()
+                .to_str()
+                .unwrap();
+            let current_time = chrono::Local::now().format("%Y%m%d_%H%M%S");
+            format!("{}_{}", file_name, current_time)
+        })
+}
+
+fn handle_build(absolute_script_path: &str, name: &str, custom_args: &[String]) -> Option<String> {
+    match builder::build::build(absolute_script_path, name, custom_args) {
+        Ok(output_path) => {
+            println!("{}\n", "[OK] Executable built successfully".green().bold());
+            Some(output_path)
+        },
+        Err(e) => {
+            eprintln!(
+                "{} Failed to build executable: {}",
+                ":: Error:".red(),
+                e.to_string().red()
+            );
+            None
+        },
     }
-
-    table.add_row(vec![
-        Cell::new("Debug Mode").fg(Color::Green),
-        Cell::new(&DEBUG.load(Ordering::SeqCst).to_string()).fg(Color::Cyan)
-    ]);
-    table.add_row(vec![
-        Cell::new("Force Mode").fg(Color::Green),
-        Cell::new(&FORCE.load(Ordering::SeqCst).to_string()).fg(Color::Cyan)
-    ]);
-
-    println!("{}", table);
-
-    match builder::venv::create(matches.get_one::<String>("script").unwrap()) {
-        Ok(_) => println!("{} Virtual environment created successfully", ":: OK:".green()),
-        Err(e) => eprintln!("{} Failed to create virtual environment: {}", ":: Error:".red(), e.to_string().red()),
-    }
-
-    // Here you would implement the main logic for CEngine
-    // For example:
-    // if matches.get_flag("clean") {
-    //     commands::clean(&matches);
-    // } else if let Some(script) = matches.get_one::<String>("script") {
-    //     commands::convert(script, &matches);
-    // } else {
-    //     println!("{} For command usage, type --help", ":: Info:".bright_blue());
-    // }
-
-    // use loading, moving, animted logs for logging also use new prefix, think of a complteletty new. Eg.: dots moving at the end and on finish text changes to finshed and we have thick also. so use emojies, colored words in the text, etc. Maybe also use spacing, new lines to make readabilty better
 }
 
 fn banner() {
@@ -181,11 +207,81 @@ fn banner() {
         }
     }
     println!();
-    let version_info = format!("CEngine Version: {}{}", "v".blue(), env!("CARGO_PKG_VERSION").blue());
-    let border_length = version_info.len() - 15; // -23 because of colors
+    let version_info = format!(
+        "CEngine Version: {}{}",
+        "v".blue(),
+        env!("CARGO_PKG_VERSION").blue()
+    );
+    let border_length = version_info.len() - 14; // -14 because of colors
     let border = "═".repeat(border_length).yellow();
-    println!("{}", border);
-    println!("{} {} {}", "║".yellow(), version_info, "║".yellow());
-    println!("{}", border);
-    println!();
+    println!(
+        "{}\n{} {} {}\n{}\n",
+        border,
+        "║".yellow(),
+        version_info,
+        "║".yellow(),
+        border
+    );
+}
+
+fn info_table(script_path: &str) {
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_header(vec![
+            Cell::new("Category").fg(Color::Yellow),
+            Cell::new("Information").fg(Color::Yellow),
+        ]);
+
+    add_row(&mut table, "OS", std::env::consts::OS);
+    add_row(&mut table, "Architecture", std::env::consts::ARCH);
+    add_row(&mut table, "Script Path", script_path);
+
+    if let Ok(canonical_path) = fs::canonicalize(script_path) {
+        add_row(
+            &mut table,
+            "Canonical Path",
+            canonical_path.display().to_string(),
+        );
+    }
+
+    if let Ok(metadata) = fs::metadata(script_path) {
+        add_row(&mut table, "File Size", format!("{} bytes", metadata.len()));
+        if let Ok(modified) = metadata.modified() {
+            if let Some(datetime) = DateTime::from_timestamp(
+                modified
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as i64,
+                0,
+            ) {
+                add_row(
+                    &mut table,
+                    "Last Modified",
+                    datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
+                );
+            }
+        }
+    }
+
+    add_row(
+        &mut table,
+        "Debug Mode",
+        DEBUG.load(Ordering::SeqCst).to_string(),
+    );
+    add_row(
+        &mut table,
+        "Force Mode",
+        FORCE.load(Ordering::SeqCst).to_string(),
+    );
+
+    println!("{}\n", table);
+}
+
+fn add_row(table: &mut Table, category: &str, info: impl AsRef<str>) {
+    table.add_row(vec![
+        Cell::new(category).fg(Color::Green),
+        Cell::new(info.as_ref()).fg(Color::Cyan),
+    ]);
 }
