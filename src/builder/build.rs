@@ -43,7 +43,7 @@ pub fn build(script_path: &str, name: &str, custom_args: &[String]) -> io::Resul
             eprintln!(":: Debug: PyInstaller stderr: {}", String::from_utf8_lossy(&output.stderr));
             eprintln!(":: Debug: PyInstaller stdout: {}", String::from_utf8_lossy(&output.stdout));
         }
-        return Err(io::Error::new(io::ErrorKind::Other, "PyInstaller build failed"));
+        return Err(io::Error::other("PyInstaller build failed"));
     }
 
     println!("[{}] PyInstaller build completed successfully", "OK".green());

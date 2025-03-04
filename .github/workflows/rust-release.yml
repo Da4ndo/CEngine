@@ -1,0 +1,105 @@
+name: Build and Release Rust Application
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g. v1.0.0)'
+        required: false
+        type: string
+      pkg_name:
+        description: 'Package name'
+        required: true
+        type: string
+      additional_files:
+        description: 'Comma-separated list of additional files to include in release'
+        required: false
+        type: string
+        default: ''
+    outputs:
+      version:
+        description: "The version that was released"
+        value: ${{ jobs.build.outputs.version }}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: cengine
+            asset_name: cengine-linux-x64
+          - os: windows-latest
+            artifact_name: cengine.exe
+            asset_name: cengine-windows-x64.exe
+    runs-on: ${{ matrix.os }}
+    outputs:
+      version: ${{ steps.get_version.outputs.VERSION }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        
+    - name: Build
+      run: cargo build --release
+      
+    - name: Get version
+      id: get_version
+      run: |
+        if [ -n "${{ inputs.version }}" ]; then
+          echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          echo "CREATE_NEW_RELEASE=true" >> $GITHUB_OUTPUT
+        else
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LATEST_TAG" ]; then
+            echo "❌ No tags found" >&2
+            exit 1
+          fi
+          echo "VERSION=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "CREATE_NEW_RELEASE=false" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+      
+    # Rename and upload executable
+    - name: Rename executable
+      run: |
+        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          mv target/release/cengine ${{ matrix.asset_name }}
+        else
+          mv target/release/cengine.exe ${{ matrix.asset_name }}
+        fi
+      shell: bash
+
+    - name: Get README Content
+      id: get_readme
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        delimiter="README_EOF_$(date +%s)"
+        {
+          echo "README_CONTENT<<$delimiter"
+          echo "$(cat README.md)"
+          echo "$delimiter"
+        } >> $GITHUB_OUTPUT
+
+    - name: Create or Update Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        name: "${{ inputs.pkg_name }} - ${{ steps.get_version.outputs.VERSION }}"
+        body: ${{ matrix.os == 'ubuntu-latest' && steps.get_readme.outputs.README_CONTENT || '' }}
+        files: ${{ matrix.asset_name }}
+        token: ${{ github.token }}
+
+    - name: Post Release Information
+      run: |
+        echo "🚀 Release Details:"
+        echo "  • Version: ${{ steps.get_version.outputs.VERSION }}"
+        echo "  • Asset: ${{ matrix.asset_name }}"
+        echo "  • Download URL: https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/${{ matrix.asset_name }}" 

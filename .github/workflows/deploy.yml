@@ -1,0 +1,34 @@
+name: Deploy CEngine
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g. v1.0.0). Leave empty to update latest release'
+        required: false
+      rel:
+        description: 'Release number (e.g. 1)'
+        required: true
+        default: '1'
+
+jobs:
+  release:
+    uses: ./.github/workflows/rust-release.yml
+    with:
+      version: ${{ github.event.inputs.version }}
+      pkg_name: cengine
+      additional_files: ''
+
+  deploy_aur:
+    needs: release
+    uses: ./.github/workflows/aur-deploy.yml
+    with:
+      version: ${{ needs.release.outputs.version }}
+      pkg_name: cengine
+      rel: ${{ github.event.inputs.rel || '1' }}
+    secrets:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+      AUR_EMAIL: ${{ secrets.AUR_EMAIL }} 

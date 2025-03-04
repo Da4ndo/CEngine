@@ -1,6 +1,10 @@
 __pycache__/
+
 cengine.version
 
 /target
 
 /venv
+
+.cursorrules
+

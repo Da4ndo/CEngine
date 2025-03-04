@@ -1,0 +1,86 @@
+name: Deploy to AUR
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to deploy'
+        required: true
+        type: string
+      pkg_name:
+        description: 'Package name'
+        required: true
+        type: string
+      rel:
+        description: 'Release number'
+        required: false
+        type: string
+        default: '1'
+    secrets:
+      AUR_SSH_PRIVATE_KEY:
+        required: true
+      AUR_USERNAME:
+        required: true
+      AUR_EMAIL:
+        required: true
+
+jobs:
+  deploy_aur:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Update PKGBUILD
+      id: pkgbuild
+      run: |
+        # Strip 'v' prefix from version for pkgver
+        VERSION_NO_V="${{ inputs.version }}"
+        VERSION_NO_V="${VERSION_NO_V#v}"  # Remove 'v' prefix if present
+        
+        echo "🔄 Updating PKGBUILD to version $VERSION_NO_V-${{ inputs.rel }}"
+        
+        # Update version (without 'v') and release in PKGBUILD
+        sed -i "s/pkgver=.*/pkgver=$VERSION_NO_V/" ./PKGBUILD
+        sed -i "s/pkgrel=.*/pkgrel=${{ inputs.rel }}/" ./PKGBUILD
+        
+        # Construct download URL (with 'v' prefix)
+        download_url="https://github.com/${{ github.repository }}/releases/download/${{ inputs.version }}/cengine-linux-x64"
+        echo "DOWNLOAD_URL=$download_url" >> $GITHUB_OUTPUT
+        echo "📥 Download URL: $download_url"
+        
+        # Update source in PKGBUILD
+        sed -i "s|source=.*|source=(\"$download_url\")|" ./PKGBUILD
+        
+        # Calculate SHA256 sum
+        echo "🔐 Calculating SHA256 sum..."
+        sha256sum=$(curl -sL "$download_url" | sha256sum | cut -d ' ' -f 1)
+        echo "SHA256=$sha256sum" >> $GITHUB_OUTPUT
+        echo "✅ SHA256: $sha256sum"
+        
+        # Update SHA256 sum in PKGBUILD
+        sed -i "s/sha256sums=.*/sha256sums=('$sha256sum')/" ./PKGBUILD
+        
+        echo "📝 PKGBUILD updated successfully"
+        echo "Content of PKGBUILD:"
+        cat ./PKGBUILD
+
+    - name: Publish AUR package
+      id: publish
+      uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+      with:
+        pkgname: ${{ inputs.pkg_name }}
+        pkgbuild: ./PKGBUILD
+        commit_username: ${{ secrets.AUR_USERNAME }}
+        commit_email: ${{ secrets.AUR_EMAIL }}
+        ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        commit_message: "Update to version ${{ inputs.version }}"
+        ssh_keyscan_types: rsa,ecdsa,ed25519
+
+    - name: Post Deployment Information
+      run: |
+        echo "🎉 AUR Package Deployment Summary:"
+        echo "  • Package: ${{ inputs.pkg_name }}"
+        echo "  • Version: ${{ inputs.version }}-${{ inputs.rel }}"
+        echo "  • Download URL: ${{ steps.pkgbuild.outputs.DOWNLOAD_URL }}"
+        echo "  • SHA256: ${{ steps.pkgbuild.outputs.SHA256 }}"
+        echo "  • AUR Page: https://aur.archlinux.org/packages/${{ inputs.pkg_name }}" 

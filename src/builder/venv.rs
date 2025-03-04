@@ -93,8 +93,7 @@ fn create_venv(spinner: &ProgressBar) -> io::Result<()> {
 
     if !output.status.success() {
         spinner.finish_with_message("[2/3] 🌐 Virtual environment creation failed ❌");
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
+        return Err(io::Error::other(
             format!(
                 "Failed to create venv: {}",
                 String::from_utf8_lossy(&output.stderr)

@@ -4,67 +4,122 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Da4ndo/CEngine)
 
+<img src="./images/cengine.png" alt="CEngine Logo" width="500" height="auto">
+
 # CEngine
 
-CEngine (Convert Engine)
+CEngine (Convert Engine) is a powerful Rust-based tool for converting Python scripts into standalone executables.
 
-![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/cengine.icon.jpg)
+## Overview
 
-This is an ***open-source*** *converter* for python to create **exe from py**. CEngine creates *automatically* virtualenv and installs the packages, and deletes unnecessary files after the build is complete.
+CEngine is an **open-source** converter that streamlines the process of creating executables from Python scripts. It handles the entire workflow automatically:
 
-- It's using **PyInstaller** or **Nuitka** to create exe. 
-- It's better because the executable is smaller (less bytes) and,
-- **CEngine** starts a cleaning proccess and deletes the dist, build, *.spec files/directories after the build is complete.
+- Creates a virtual environment
+- Analyzes and detects required packages
+- Installs dependencies
+- Builds the executable
+- Cleans up temporary files
 
-## CHANGELOG
+## Features
 
-1.0.8 (01/01/2022):
+- **Smart Import Detection**: Automatically scans your Python script to identify required packages
+- **Virtual Environment Management**: Creates and configures isolated environments for clean builds
+- **Dependency Resolution**: Handles package installation, including special cases like PyWin32 and OpenCV
+- **Build Optimization**: Creates optimized executables with minimal size
+- **Automatic Cleanup**: Removes temporary build files after completion
+- **Cross-Platform Support**: Works on Windows, macOS, and Linux
+- **Debug Mode**: Detailed logging for troubleshooting
+- **Force Mode**: Override warnings and proceed with operations
 
-- Added `-b` | `--windows-defender-bypass` option.
-- Solved issues, cleaned code.
-- Code optionalization.
+## Installation
 
-`More in changelog.txt`
+### From GitHub Releases
 
-## How does it work?
+#### Windows
+1. Download the latest Windows executable from the [Releases page](https://github.com/Da4ndo/CEngine/releases)
+2. Download `cengine-windows-x64.exe`
+3. Add the executable to your PATH or run it directly
 
-1. Creates a virtualenv.
-2. Analyzes the target script to get the imports.
-3. Installs the packages with pip.
-4. Starts pyinstaller or nuitka.
+#### Linux
+1. Download the latest Linux binary from the [Releases page](https://github.com/Da4ndo/CEngine/releases)
+2. Download `cengine-linux-x64`
+3. Make it executable:
+   ```bash
+   chmod +x cengine-linux-x64
+   ```
+4. Move it to a directory in your PATH:
+   ```bash
+   sudo mv cengine-linux-x64 /usr/local/bin/cengine
+   ```
 
-![alt text](https://github.com/Mesteri05/CEngine/blob/main/images/running_in_console.png)
-Virtualenv create processs and analyze proccess 👆
+### Arch Linux (AUR)
 
-![alt text2](https://github.com/Mesteri05/CEngine/blob/main/images/running_in_console2.png)
-Cleaning process 👆
+> [!CAUTION]
+> AUR package is not yet available. The following installation methods will be supported once the package is published to AUR:
+
+For Arch Linux users, CEngine is available in the AUR:
+
+#### Using yay
+```bash
+yay -S cengine
+```
+
+#### Using paru
+```bash
+paru -S cengine
+```
+
+#### Manual installation from AUR
+```bash
+git clone https://aur.archlinux.org/cengine.git
+cd cengine
+makepkg -si
+```
 
 ## Usage
 
+```bash
+CEngine (Convert Engine) is an open-source converter for Python to create exe from py files.
+
+Usage: cengine <SCRIPT> [OPTIONS] [PYINSTALLER_ARGUMENTS]
+
+Arguments:
+  [SCRIPT]  Define a script to be made into an executable
+
+Options:
+  -n, --name <NAME>                Define the script name
+      --add-imports <IMPORTS>...   Add more imports
+      --force-platform <PLATFORM>  Add custom arguments
+      --clean                      Clean failed builds
+      --debug                      Sets the debug environment to true
+      --force                      Forces the operation to proceed with all warnings and skippings
+  -h, --help                       Print help
+  -V, --version                    Print version
 ```
-usage: cengine.py [-h] [--nuitka] [-s SCRIPT] [-n NAME] [-b] [--add-imports ADD_IMPORTS [ADD_IMPORTS ...]]
-                  [--force-platform FORCE_PLATFORM] [--clean]
 
-options:
-  -h, --help            show this help message and exit
-  --nuitka              Change from pyinstaller to nuitka compiler.
-  -s SCRIPT, --script SCRIPT, --file SCRIPT
-                        Define a script to be made into an executable.
-  -n NAME, --name NAME  Define the script name.
-  -b, --windows-defender-bypass
-                        Bypass windows defeneder with base64 encode/decode.
-  --add-imports ADD_IMPORTS [ADD_IMPORTS ...]
-                        Add more imports.
-  --force-platform FORCE_PLATFORM
-                        Add custom arguments.
-  --clean               Clean failed builds.
+### Basic Usage
+
+```bash
+cengine test.py
 ```
-Convert: 
 
-- cengine --script **cengine.py** --name **cengine** --icon **NONE** --version-file **cengine.version**
-- cengine **--nuitka** --script **cengine.py** --name **cengine**
+##### With name:
+```bash
+cengine test.py --name test
+```
 
-Clean:
+##### With custom arguments:
+```bash
+cengine test.py --force-platform linux --add-imports numpy
+```
 
-- cengine --script **cengine.py** --clean
-- cengine **--nuitka** --script **cengine.py** --clean
+##### Clean failed build:
+```bash
+cengine test.py --name test --clean
+```
+
+
+
+
+
+
