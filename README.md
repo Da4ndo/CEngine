@@ -54,9 +54,6 @@ CEngine is an **open-source** converter that streamlines the process of creating
 
 ### Arch Linux (AUR)
 
-> [!CAUTION]
-> AUR package is not yet available. The following installation methods will be supported once the package is published to AUR:
-
 For Arch Linux users, CEngine is available in the AUR:
 
 #### Using yay
