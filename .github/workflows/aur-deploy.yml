@@ -44,7 +44,7 @@ jobs:
         sed -i "s/pkgrel=.*/pkgrel=${{ inputs.rel }}/" ./PKGBUILD
         
         # Construct download URL (with 'v' prefix)
-        download_url="https://github.com/${{ github.repository }}/releases/download/${{ inputs.version }}/cengine-linux-x64"
+        download_url="https://github.com/${{ github.repository }}/releases/download/${{ inputs.version }}/hyprproxlock-linux-x64"
         echo "DOWNLOAD_URL=$download_url" >> $GITHUB_OUTPUT
         echo "📥 Download URL: $download_url"
         
